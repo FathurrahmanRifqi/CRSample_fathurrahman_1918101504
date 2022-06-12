@@ -12,6 +12,9 @@ function pdo_connect(){
     }
 }
 
+
+
+
 function style_script(){
     return '
     <link rel="stylesheet" href="style.css">

@@ -11,21 +11,31 @@
 <body class="text-center">
     <?php
     $notif = null;
-    if (isset($_POST['username']) && isset($_POST['password'])) {
+    session_start();
+    if (empty($_SESSION['token'])) {
+        $_SESSION['token'] = bin2hex(random_bytes(32));
+    }
+    $token = $_SESSION['token'];
 
-        session_start();
-        $user = $_POST['username'];
-        $pass = $_POST['password'];
-        $salt = "XDrBmrW9g2fb";
-        $pdo = pdo_connect();
-        $stmt = $pdo->prepare('SELECT * FROM users WHERE username = "' . $user . '" AND password = "' . hash('sha256', $pass . $salt) . '" LIMIT 1');
-        $stmt->execute();
-        $notif = $stmt->rowCount();
-        if ($stmt->rowCount() > 0) {
-            $_SESSION['user'] = $user;
-            header("location: index.php");
-        } else {
-            $notif = "Wrong usename or password";
+    if (!empty($_POST['token'])) {
+        if (hash_equals($_SESSION['token'], $_POST['token'])) {
+
+            if (isset($_POST['username']) && isset($_POST['password'])) {
+                $user = $_POST['username'];
+                $pass = $_POST['password'];
+                $salt = "XDrBmrW9g2fb";
+                $pdo = pdo_connect();
+                $stmt = $pdo->prepare('SELECT * FROM users WHERE username = "' . $user . '" AND password = "' . hash('sha256', $pass . $salt) . '" LIMIT 1');
+                $stmt->execute();
+                $notif = $stmt->rowCount();
+                if ($stmt->rowCount() > 0) {
+                    $_SESSION['user'] = $user;
+                    
+                    header("location: index.php");
+                } else {
+                    $notif = "Wrong usename or password";
+                }
+            }
         }
     }
 
@@ -42,6 +52,8 @@
                 <?= $notif ?>
             </label>
         </div>
+        <input type="hidden" name="token" value="<?= $token ?>">
+
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
         <p class="mt-5 mb-3 text-muted">hk &copy; 2021</p>
     </form>

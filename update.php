@@ -1,29 +1,37 @@
 <?php
-
-include 'functions.php';
-$pdo = pdo_connect();
-
-if (isset($_GET['id'])) {
-    if (!empty($_POST)) {
-        $name = $_POST['name'];
-        $email = $_POST['email'];
-        $phone = $_POST['phone'];
-        $title = $_POST['title'];
-        // Insert new record into the contacts table
-        $stmt = $pdo->prepare('UPDATE contacts SET name = ?, email = ?, phone = ?, title = ? WHERE id = ?');
-        $stmt->execute([$name, $email, $phone, $title, $_GET['id']]);
-        header("location:index.php");
-    }
-
-    $stmt = $pdo->prepare('SELECT * FROM contacts WHERE id = ?');
-    $stmt->execute([$_GET['id']]);
-    $contact = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$contact) {
-        die('Contact doesn\'t exist!');
-    }
+include "functions.php";
+session_start();
+// BAD LOGIC MITIGATION
+if (!isset($_SESSION['user'])) {
+    header("location: login.php");
 } else {
-    die('No ID specified!');
-}
+    $pdo = pdo_connect();
+   
+    if (isset($_GET['id'])) {
+        if (!empty($_POST)) {
+            $name = htmlspecialchars($_POST['name']);
+            $email = htmlspecialchars($_POST['email']);
+            $phone = htmlspecialchars($_POST['phone']);
+            $title = htmlspecialchars($_POST['title']);
+            // Insert new record into the contacts table
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare('UPDATE contacts SET name = ?, email = ?, phone = ?, title = ? WHERE id = ?');
+            $stmt->execute([$name, $email, $phone, $title, $_GET['id']]);
+            $pdo->commit();
+            header("location:index.php");
+        }
+
+        $stmt = $pdo->prepare('SELECT * FROM contacts WHERE id = ?');
+        $stmt->execute([$_GET['id']]);
+        $contact = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$contact) {
+            die('Contact doesn\'t exist!');
+        }
+    } else {
+        die('No ID specified!');
+    }
+        
+    
 
 ?>
 <!DOCTYPE html>
@@ -50,6 +58,7 @@ if (isset($_GET['id'])) {
                             <input class="form-control form-control-sm" placeholder="Phone number" type="text" name="phone" value="<?= $contact['phone'] ?>" id="phone"><br>
                             <input class="form-control form-control-sm" placeholder="Title" type="text" name="title" value="<?= $contact['title'] ?>" id="title"><br>
                             <input class="btn btn-primary btn-sm" type="submit" value="Update">
+                            <input class="btn btn-primary btn-sm" type="submit" value="Save">
                             <a href="index.php" type="button" class="btn btn-warning btn-sm">Cancel</a>
                         </form>
                     </div>
@@ -65,3 +74,4 @@ if (isset($_GET['id'])) {
 </body>
 
 </html>
+<?php } ?>

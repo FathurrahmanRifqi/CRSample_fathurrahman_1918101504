@@ -1,18 +1,43 @@
 <?php
 include 'functions.php';
-$pdo = pdo_connect();
+// BAD LOGIC MITIGATION
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("location: login.php");
+} else {
+    $pdo = pdo_connect();
 
-if (!empty($_POST)) {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $phone = $_POST['phone'];
-    $title = $_POST['title'];
-    $created = date('Y-m-d H:i:s');
-    // Insert new record into the contacts table
-    $stmt = $pdo->prepare('INSERT INTO contacts VALUES (?, ?, ?, ?, ?, ?)');
-    $stmt->execute([$id, $name, $email, $phone, $title, $created]);
-    header("location:index.php");
-}
+    if (empty($_SESSION['token'])) {
+        $_SESSION['token'] = bin2hex(random_bytes(32));
+    }
+    $token = $_SESSION['token'];
+
+    if (!empty($_POST['token'])) {
+        if (hash_equals($_SESSION['token'], $_POST['token'])) {
+            if (!empty($_POST)) {
+                $name = htmlspecialchars($_POST['name']);
+                $email = htmlspecialchars($_POST['email']);
+                $phone = htmlspecialchars($_POST['phone']);
+                $title = htmlspecialchars($_POST['title']);
+    
+                if(!empty($name) || !empty($email) || !empty($phone) || !empty($title)){
+    
+                    $created = date('Y-m-d H:i:s');
+                    // Insert new record into the contacts table
+                    $stmt = $pdo->prepare('INSERT INTO contacts VALUES (?, ?, ?, ?, ?, ?)');
+    
+                    $stmt->execute([$id, $name, $email, $phone, $title, $created]);
+    
+                    $stmt->execute();
+                    header("location:index.php");
+                }
+                
+            }
+       } else {
+            // Log this as a warning and keep an eye on these attempts
+       }
+        
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,6 +62,7 @@ if (!empty($_POST)) {
                             <input class="form-control form-control-sm" placeholder="Email" type="text" name="email" id="email" required><br>
                             <input class="form-control form-control-sm" placeholder="Phone number" type="text" name="phone" id="phone" required><br>
                             <input class="form-control form-control-sm" placeholder="Title" type="text" name="title" id="title" required><br>
+                            <input type="hidden" name="token" value="<?= $token ?>">
                             <input class="btn btn-primary btn-sm" type="submit" value="Save">
                             <a href="index.php" type="button" class="btn btn-warning btn-sm">Cancel</a>
                         </form>
@@ -53,3 +79,4 @@ if (!empty($_POST)) {
 </body>
 
 </html>
+<?php } ?>

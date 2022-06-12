@@ -1,0 +1,6 @@
+projectKey=CRSsampe-Review
+serverUrl=http://localhost:9000
+serverVersion=9.4.0.54424
+dashboardUrl=http://localhost:9000/dashboard?id=CRSsampe-Review
+ceTaskId=AYDzwfHVEY0iwSPwELsr
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AYDzwfHVEY0iwSPwELsr
